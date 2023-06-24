@@ -3,28 +3,38 @@ from bs4 import BeautifulSoup
 from reg import regex
 from tabulate import tabulate
 
-# with sync_playwright() as p:
-#     browser = p.firefox.launch()
-#     page = browser.new_page()
-#     page.goto("https://sg.finance.yahoo.com/quote/OV8.SI/cash-flow?p=OV8.SI&guccounter=1")
-#     text = page.content()
-#     browser.close()
+link = "https://sg.finance.yahoo.com/quote/BABA/financials?p=BABA"
 
-with open("main_page.txt", "r") as file:
-    text = file.read()
+def get_data(link):
+    with sync_playwright() as p:
+        browser = p.firefox.launch()
+        page = browser.new_page()
+        page.goto(link)
+        text = page.content()
+        browser.close()
+    return text
 
-pattern = r'<div id="mrt-node-Col1-1-Financials" data-locator="subtree-root">(.*?)<script>'
-regex = regex(pattern, text, "first_reg.txt")
+def write_file(text, folder, filename):
+    with open(f"./{folder}/{filename}", "w") as file:
+        file.write(text)
 
-# text = ""
-# with open("example.txt", "r") as file:
-#     text = file.read()
+def read_file(folder, filename):
+    with open(f"./{folder}/{filename}", "r") as file:
+        text = file.read()
+    return text
 
-# soup = BeautifulSoup(text, "html.parser").text.replace("Show:Income statementBalance sheetCash flowAnnualQuarterlyCash flowAll numbers in thousands",  "")
+# text = read_file("baba_files", "main_page.txt")
 
-#i need to change the data in soup to form a list of lists
+# pattern = r'<div class="M\(0\) Whs\(n\) BdEnd Bdc\(\$seperatorColor\) D\(itb\)">(.*?)<script>'
+# regex = regex(pattern, text, "first_reg.txt")
 
-# print(soup)
+text = read_file("baba_files", "first_reg.txt")
+
+soup = BeautifulSoup(text, "html.parser")
+
+table = soup.find("table", {"class": "W(100%) Bdcl(c) "})
+
+write_file(str(table), "baba_files", "table.txt")
 
 
 
