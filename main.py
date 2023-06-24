@@ -28,14 +28,16 @@ def main(link):
     final.append(lst)
     final = final[1:]
     write_file(str(final), "./files", "data.txt")
-    write_file(str(reorg(final)[1:]), "./files", "reorged.txt")
+    re_organised = str(reorg(final)[1:])
+    write_file(re_organised, "./files", "reorged.txt")
 
 
 def get_data(link):
     with sync_playwright() as p:
         browser = p.firefox.launch()
         page = browser.new_page()
-        page.goto(link)
+        # increased timeout to reduce timout error
+        page.goto(link, timeout=100000)
         text = page.content()
         browser.close()
     write_file(text, "files", "main_page.txt")
@@ -63,6 +65,7 @@ def reorg(data):
             except IndexError:
                 dic[y[0]] = "N/A"
         org.append(dic)
+    return org
     
 
 
