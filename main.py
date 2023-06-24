@@ -47,12 +47,11 @@ for span in table:
             lst = [span.text, ]
     else:
         lst.append(span.text)
+final.append(lst)
 
 final = final[1:]
 
 table = tabulate(final, headers='firstrow', tablefmt='fancy_grid')
 
-write_file(str(final), "./", "data.txt")
+write_file(str(final), "./files", "data.txt")
 print(table)
-
-            
