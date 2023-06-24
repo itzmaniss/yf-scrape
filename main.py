@@ -7,7 +7,7 @@ def main(link):
     get_data(link)
     text = read_file("files", "main_page.txt")
     pattern = r'<div class="M\(0\) Whs\(n\) BdEnd Bdc\(\$seperatorColor\) D\(itb\)">(.*?)<script>'
-    regex = regex(pattern, text, "first_reg.txt")
+    regex(pattern, text, "./files/first_reg.txt")
     text = read_file("files", "first_reg.txt")
     soup = BeautifulSoup(text, "html.parser")
     table = soup.findAll("span")
@@ -28,6 +28,7 @@ def main(link):
     final.append(lst)
     final = final[1:]
     write_file(str(final), "./files", "data.txt")
+    write_file(str(reorg(final)[1:]), "./files", "reorged.txt")
 
 
 def get_data(link):
@@ -55,15 +56,14 @@ def reorg(data):
     x = len(data[0])
     org = list()
     for i in range(x - 1):
-        print(i)
         dic = dict()
         for y in data:
-            print(y)
             try:
                 dic[y[0]] = y[i]
             except IndexError:
                 dic[y[0]] = "N/A"
         org.append(dic)
+    
 
 
 def regex(pattern, text, filename):
