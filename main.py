@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 from reg import regex
 from tabulate import tabulate
 
-link = "https://sg.finance.yahoo.com/quote/BABA/financials?p=BABA"
+link = "https://sg.finance.yahoo.com/quote/BABA/balance-sheet?p=BABA"
 
 def get_data(link):
     with sync_playwright() as p:
@@ -12,7 +12,7 @@ def get_data(link):
         page.goto(link)
         text = page.content()
         browser.close()
-    return text
+    write_file(text, "baba1_files", "main_page.txt")
 
 def write_file(text, folder, filename):
     with open(f"./{folder}/{filename}", "w") as file:
@@ -23,21 +23,36 @@ def read_file(folder, filename):
         text = file.read()
     return text
 
-# text = read_file("baba_files", "main_page.txt")
+get_data(link)
 
-# pattern = r'<div class="M\(0\) Whs\(n\) BdEnd Bdc\(\$seperatorColor\) D\(itb\)">(.*?)<script>'
-# regex = regex(pattern, text, "first_reg.txt")
+text = read_file("baba1_files", "main_page.txt")
 
-text = read_file("baba_files", "first_reg.txt")
+pattern = r'<div class="M\(0\) Whs\(n\) BdEnd Bdc\(\$seperatorColor\) D\(itb\)">(.*?)<script>'
+regex = regex(pattern, text, "first_reg.txt")
+
+text = read_file("baba1_files", "first_reg.txt")
 
 soup = BeautifulSoup(text, "html.parser")
 
-table = soup.find("table", {"class": "W(100%) Bdcl(c) "})
+table = soup.findAll("span")
 
-write_file(str(table), "baba_files", "table.txt")
+final = list()
+lst = list()
+for span in table:
+    if span.text[0].isalpha():
+        if span.text == "ttm":
+            lst.append(span.text)
+        else:
+            final.append(lst)
+            lst = [span.text, ]
+    else:
+        lst.append(span.text)
 
+final = final[1:]
 
+table = tabulate(final, headers='firstrow', tablefmt='fancy_grid')
 
+write_file(str(final), "./", "data.txt")
+print(table)
 
-
-
+            
