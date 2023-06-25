@@ -1,15 +1,14 @@
 from playwright.sync_api import sync_playwright
 from bs4 import BeautifulSoup
 import re
+import threading
 
 
-def main(link):
-    get_data(link)
-    text = read_file("files", "main_page.txt")
+def main(link, sub):
+    text = get_data(link)
     pattern = r'<div class="M\(0\) Whs\(n\) BdEnd Bdc\(\$seperatorColor\) D\(itb\)">(.*?)<script>'
-    regex(pattern, text, "./files/first_reg.txt")
-    text = read_file("files", "first_reg.txt")
-    soup = BeautifulSoup(text, "html.parser")
+    specific_text = regex(pattern, text)
+    soup = BeautifulSoup(specific_text, "html.parser")
     table = soup.findAll("span")
     final = list()
     lst = list()
@@ -27,9 +26,8 @@ def main(link):
             lst.append(span.text)
     final.append(lst)
     final = final[1:]
-    write_file(str(final), "./files", "data.txt")
     re_organised = str(reorg(final)[1:])
-    write_file(re_organised, "./files", "reorged.txt")
+    write_file(re_organised, "./files", f"{sub}_reorged.txt")
 
 
 def get_data(link):
@@ -40,18 +38,12 @@ def get_data(link):
         page.goto(link, timeout=100000)
         text = page.content()
         browser.close()
-    write_file(text, "files", "main_page.txt")
+    return text
 
 
 def write_file(text, folder, filename):
     with open(f"./{folder}/{filename}", "w") as file:
         file.write(text)
-
-
-def read_file(folder, filename):
-    with open(f"./{folder}/{filename}", "r") as file:
-        text = file.read()
-    return text
 
 
 def reorg(data):
@@ -66,20 +58,45 @@ def reorg(data):
                 dic[y[0]] = "N/A"
         org.append(dic)
     return org
-    
 
 
 def regex(pattern, text, filename):
     match = re.search(pattern, text, re.DOTALL)
     if match:
         extracted_text = match.group(1)
-        with open(filename, "w") as file:
-            file.write(extracted_text)
+        return extracted_text
 
     else:
         print("No match found!")
 
 
 if __name__ == "__main__":
-    link = input("Enter the link: ")
-    main(link)
+    ticker = input("Enter the ticker: ")
+    t1 = threading.Thread(
+        target=main,
+        args=(
+            f"https://finance.yahoo.com/quote/{ticker}/financials?p={ticker}",
+            "financials",
+        ),
+    )
+    t2 = threading.Thread(
+        target=main,
+        args=(
+            f"https://finance.yahoo.com/quote/{ticker}/cash-flow?p={ticker}",
+            "cash-flow",
+        ),
+    )
+    t3 = threading.Thread(
+        target=main,
+        args=(
+            f"https://finance.yahoo.com/quote/{ticker}/balance-sheet?p={ticker}",
+            "balance-sheet",
+        ),
+    )
+    t1.start()
+    t2.start()
+    t3.start()
+    t1.join()
+    t2.join()
+    t3.join()
+    print("Done!")
