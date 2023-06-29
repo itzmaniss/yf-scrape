@@ -2,6 +2,8 @@ from playwright.sync_api import sync_playwright
 from bs4 import BeautifulSoup
 import re
 import threading
+import time
+import json 
 
 
 def main(link, sub):
@@ -26,8 +28,9 @@ def main(link, sub):
             lst.append(span.text)
     final.append(lst)
     final = final[1:]
-    re_organised = str(reorg(final)[1:])
-    write_file(re_organised, "./files", f"{sub}_reorged.txt")
+    re_organised = reorg(final)[1:]
+    with open(f"./files/{ticker}_{sub}.json", "w") as file:
+        json.dump(re_organised, file, indent=4)
 
 
 def get_data(link):
@@ -39,12 +42,6 @@ def get_data(link):
         text = page.content()
         browser.close()
     return text
-
-
-def write_file(text, folder, filename):
-    with open(f"./{folder}/{filename}", "w") as file:
-        file.write(text)
-
 
 def reorg(data):
     x = len(data[0])
@@ -60,7 +57,7 @@ def reorg(data):
     return org
 
 
-def regex(pattern, text, filename):
+def regex(pattern, text):
     match = re.search(pattern, text, re.DOTALL)
     if match:
         extracted_text = match.group(1)
@@ -68,9 +65,11 @@ def regex(pattern, text, filename):
 
     else:
         print("No match found!")
+        raise Exception("DATA NOT FOUND")
 
 
 if __name__ == "__main__":
+    start = time.time()
     ticker = input("Enter the ticker: ")
     t1 = threading.Thread(
         target=main,
@@ -99,4 +98,5 @@ if __name__ == "__main__":
     t1.join()
     t2.join()
     t3.join()
-    print("Done!")
+    end = time.time()
+    print(f"Done! only took {end-start} seconds")
